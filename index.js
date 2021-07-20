@@ -1,3 +1,21 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: MIT-0
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify,
+ * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 console.log("Loading function");
 const common = require( __dirname + '/Modules/common.js');
 const tokenP = require( __dirname + '/Modules/token-path.js');
@@ -10,12 +28,12 @@ exports.handler = (event, context, callback) => {
 
     //Initialize default settings if needed
     if (!process.env.CODE_EXPIRATION || process.env.CODE_EXPIRATION == '') process.env.CODE_EXPIRATION = "1800";
-    if (!process.env.DEVICE_CODE_FORMAT || process.env.DEVICE_CODE_FORMAT == '') process.env.DEVICE_CODE_FORMAT = "#aA";
-    if (!process.env.DEVICE_CODE_LENGTH || process.env.DEVICE_CODE_LENGTH == '') process.env.DEVICE_CODE_LENGTH = "64";
+    if (!process.env.DYNAMODB_TABLE || process.env.DYNAMODB_TABLE == '') process.env.DYNAMODB_TABLE = "DeviceGrant";
     if (!process.env.DYNAMODB_AUTHZ_STATE_INDEX || process.env.DYNAMODB_AUTHZ_STATE_INDEX == '') process.env.DYNAMODB_AUTHZ_STATE_INDEX = "AuthZ_state-index";
-    if (!process.env.DYNAMODB_TABLE || process.env.DYNAMODB_TABLE == '') process.env.DYNAMODB_TABLE = "DeviceGrant-index";
     if (!process.env.DYNAMODB_USERCODE_INDEX || process.env.DYNAMODB_USERCODE_INDEX == '') process.env.DYNAMODB_USERCODE_INDEX = "User_code-index";
     if (!process.env.POLLING_INTERVAL || process.env.POLLING_INTERVAL == '') process.env.POLLING_INTERVAL = "5";
+    if (!process.env.DEVICE_CODE_FORMAT || process.env.DEVICE_CODE_FORMAT == '') process.env.DEVICE_CODE_FORMAT = "#aA";
+    if (!process.env.DEVICE_CODE_LENGTH || process.env.DEVICE_CODE_LENGTH == '') process.env.DEVICE_CODE_LENGTH = "64";
     if (!process.env.USER_CODE_FORMAT || process.env.USER_CODE_FORMAT == '') process.env.USER_CODE_FORMAT = "#B";
     if (!process.env.USER_CODE_LENGTH || process.env.USER_CODE_LENGTH == '') process.env.USER_CODE_LENGTH = "8";
     if (!process.env.RESULT_TOKEN_SET || process.env.RESULT_TOKEN_SET == '') process.env.RESULT_TOKEN_SET = "ACCESS+REFRESH";
