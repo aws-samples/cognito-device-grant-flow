@@ -28,7 +28,7 @@ Once imported in ACM:
 
 ## Deploying the solution using a CloudFormation Template
 To configure the workshop you will need to deploy the master workshop template.
-> Before you deploy the CloudFormation template feel free to view it [here](../CFT/CFT-DeviceGrantFlowDemo-latest.yml)
+> Before you deploy the CloudFormation template feel free to view it [here](https://awsiammedia.s3.amazonaws.com/public/sample/877-OAuth-device-grant-flow-Cognito-Lambda/CFT-DeviceGrantFlowDemo-latest.yml)
 
 It is best to deploy in `us-east-1` using Cloud Formation.
 

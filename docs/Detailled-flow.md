@@ -23,7 +23,7 @@
  Accept: */*
  Accept-Encoding: gzip, deflate
  Connection: Keep-Alive
- Authorization: Basic QUlEQUNLQ0VWU1E2QzJFWEFNUExFOndKYWxyWFV0bkZFTUkvSzdNREVORy9iUHhSZmlDWUVYQU1QTEVLRVkg
+ Authorization: Basic QUlEÉEXAMPLEQTEVLRVkg
 ```
 
  3.a - If valid, the Lambda function generates some device code and user code,
@@ -37,7 +37,7 @@
     "device_code": "APKAEIBAERJR2EXAMPLE",
     "user_code": "ANPAJ2UCCR6DPCEXAMPLE",
     "verification_uri": "https://<FQDN of the ALB protected Lambda function>/device",
-    "verification_uri_complete": "https://<FQDN of the ALB protected Lambda function>/device?code=<User Code>&authorize=true",
+    "verification_uri_complete": "https://<FQDN of the ALB protected Lambda function>/device?code=ANPAJ2UCCR6DPCEXAMPLE&authorize=true",
     "interval": <Echo of POLLING_INTERVAL environment variable>,
     "expires_in": <Echo of CODE_EXPIRATION environment variable>
 }
@@ -56,7 +56,7 @@
  Accept: */*
  Accept-Encoding: gzip, deflate
  Connection: Keep-Alive
- Authorization: Basic QUlEQUNLQ0VWU1E2QzJFWEFNUExFOndKYWxyWFV0bkZFTUkvSzdNREVORy9iUHhSZmlDWUVYQU1QTEVLRVkg
+ Authorization: Basic QUlEÉEXAMPLEQTEVLRVkg
 ```
 
 5.b -  Then the Lambda function will return, until the Authorization request has been accepted or denied by the user, a JSON message with `authorization_pending` if the request is still valid, `expired` otherwise. For example:
@@ -115,7 +115,7 @@ cache-control: no-store
  Accept: */*
  Accept-Encoding: gzip, deflate
  Connection: Keep-Alive
- Authorization: Basic QUlEQUNLQ0VWU1E2QzJFWEFNUExFOndKYWxyWFV0bkZFTUkvSzdNREVORy9iUHhSZmlDWUVYQU1QTEVLRVkg
+ Authorization: Basic QUlEÉEXAMPLEQTEVLRVkg
 ```
 
 11.b - Cause the Authorization Request has been 'Authorized', the Lambda function retrieves the Authorization Code stored within the Authorization request in the DynamoDB table
@@ -130,7 +130,7 @@ Content-Type: application/json
 Content-Length: 3501
 Connection: keep-alive
 cache-control: no-store
-{"id_token":"eyJraWQiOiIrUE00eDUwYjBnTUlLdVNnSVZhKzZqZndjazRCbmcrSkVOTlNrN2NxNEl3PSIsImFsZyI6IlJTMjU2In0.eyJhdF9oYXNoIjoia0N3U2NXVF9VXzF1WVRvdElJUE5vdyIsInN1YiI6ImM1MThjNzg0LWJlYWQtNDUyMy05OWQ2LTU5YjYwY2ZjNmI0YiIsImF1ZCI6IjZnbGdrc2V2MWlwdTAIDACKCEVSQ6C2EXAMPLEcm5hbWUiOiJ0ZXN0X3N0YXR1cyIsInBob25lX251bWJlciI6IisxNTE0Nzc4NTU2NSIsImV4cCI6MTYxNzczODExMCwiaWF0IjoxNjE3NzM0NTEwLCJlbWFpbCI6ImplZmZzZWNAYW1hem9uLmNvbSJ9.RfEzbli4kgdBK7-1RLRJAEHo5o75g7EKiKyNJzxDGmacBcPYu6mZdF8PaqJ-ae0YSNfXsQlHRsRcCRn8fr7wlFi8OzruL8HKY34Kgm2qfcA7VbG6xYDFOxNLhYSKL5Otbx6933M2Wr_Nf7BwuxdWg","access_token":"eyJraWQiOiJGVHVFNG51MmxaS2ZSY2g5QmttUGgxZzdkeTVXREJYNUhPd1BiNXNrZ3k4PSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJjNTE4Yzc4NC1iZWFkLTQ1MjMtOTlkNi01OWI2MGNmYzZiNGIiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6Im9wZW5pZCIsImF1dGhfdGlje7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY 6IjIzMzc4ZTE5LTZmZTItNDU4Mi04N2YzLTNhOGY0NDc0YmE4YyIsImNsaWVudF9pZCI6IjZnbGdrc2V2MWlwdTZkb2Y4cTBtZ2VsZGp1IiwidXNlcm5hbWUiOiJ0ZXN0X3N0YXR1cyJ9.eYEs-zaPdHzrsZet_gC1REeK6Ybmz-AmvpA526sqZY-0w7KBF5f4kL1nQCZuHzYJdGRF_S6uDVWgbdqOc2uWwyKdVfORBbCB51cgcUE3KJnZlazn7og-mtIK9rRSzad7apYhQeuefnMCXtl0h4mcUvSyzuNv6hrp3cllNOYa77oLo3X4jxIa3P4vVvRP1NG3tRENrslsc-Kr3xG23FueZW-z2Su6eRjiCmKgL2vCxUqGneyD5q8CBtG-CaJmmmqpp6KHLCPltw","refresh_token":"eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiUlNBLU9BRVAifQ.KUPenGprPRxuv4ETVvxxfnsIbGkifpc8mUVOq4X0qR42UMg-DCZedSePcWb6kG1dbHhzbTC7HlaAkKhVHkf0YyZIjBxK5JQv1OdKpcFolK6VzcHrOyYijSPJCsWy9EDMT2xi0wQ7MEOirrUpGE_2I2dRIRJIfpHA75W1NqYc30EUH-rouqw_9WXeK3n2SWsRved8TNK-JVw1JSc3VeuyVdjXu_KSvcJLQ_hKxwJ5-7LjUVDA2sAdBTvHIAPKAEIBAERJR2EXAMPLELqBRjd3kyRBb3iW7ZEuxJhKTEVf60EqFiJi28z6XOkWNe3eXmYqBBFaXNTcUDDZry47_bWxVS71jGJi1CCcWkCYkRFz1wWPEclHfNWHlQVNsBAiC8hA95CQTVl7FiucE4KZBUFrGUw7-CEHoZbJyPzVaCigR-5BXi9ELo7cRUsvRPGr0XMBDgYnBQysA_grAnMlyqoht68JOVc_drfxV0bASRBREc07APvMPs1Mc6XiQfU7apy4XxB7iY5_oW5Umt-ZxAVbm-co.pjPDkHlhEfcAI7KdCYdhpw","expires_in":3600}
+{"id_token":"eyJraEXAMPLEHEADJTMjU2In0.eyJhdFEXAMPLEPAYLOADNvbSJ9.RfEzbli4EXAMPLESIG3M2Wr_Nf7BwuxdWg","access_token":"eyJraEXAMPLEHEAD2In0.eyJzEXAMPLEPAYLOADyJ9.eYEEXAMPLESIGKHLCPltw","refresh_token":"eyJjdHkiOiEXAMPLEREFRESHYdhpw","expires_in":3600}
 ```
 
 12.a - The Lambda function returns the JWT Tokens JSON object to the Client Application

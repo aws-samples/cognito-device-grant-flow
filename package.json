@@ -1,0 +1,22 @@
+{
+  "name": "cognito-device-grant-flow",
+  "version": "1.0.0",
+  "description": "This repository is a demonstration on how to realize Device Grant flow ([RFC 8628](https://tools.ietf.org/html/rfc8628)) using Cognito, Lambda, and DynamoDB.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aws-samples/cognito-device-grant-flow.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aws-samples/cognito-device-grant-flow/issues"
+  },
+  "homepage": "https://github.com/aws-samples/cognito-device-grant-flow#readme"
+}
