@@ -1,5 +1,5 @@
 # Detailled flow
-> All the Client Applicaiton calls can be performed using Curl library, Postman client, or any HTTP request library or SDK available in the Client Applicaiton coding language.
+> All the Client Application calls can be performed using Curl library, Postman client, or any HTTP request library or SDK available in the Client Applicaiton coding language.
 > 
 > Note that OAuth2 Clients can be:
 > - Public, therefore the client only owns a `Client ID`. If so the client only has to provide the `Client ID` as parameter of the request.
