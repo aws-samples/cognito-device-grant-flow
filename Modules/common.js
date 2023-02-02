@@ -60,7 +60,7 @@ function generateCookieVal() {
 //  encoded:    The Base64 URL encoded value
 //  result:     The decoded value
 function base64UrlDecode(encoded) {
-    encoded = encoded.replace('-', '+').replace('_', '/');
+    encoded = encoded.replaceAll('-', '+').replaceAll('_', '/');
     while (encoded.length % 4)
       encoded += '=';
     return base64Decode(encoded);
@@ -78,7 +78,7 @@ function base64Decode(encoded) {
 //  result:     The Base64 URL encoded value
 function base6UurlEncode(unencoded) {
     var encoded = base64Encode(unencoded);
-    return encoded.replace('+', '-').replace('/', '_').replace(/=+$/, '');
+    return encoded.replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 }
 
 //Function that performs Base64 encoding
