@@ -1,0 +1,899 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  ACredsEmail:
+    Type: String
+    MinLength: 8
+    MaxLength: 42
+    Description: Email fo the Cognito user that act as the device owner
+  ACertificateARN:
+    Type: String
+    Description: >-
+      ARN of the certificate imported in AWS Certificate Manager for the choosen
+      FQDN
+  AFullyQualifiedDomainName:
+    Type: String
+    Description: Choosen FQDN
+  ResultTokenSet:
+    Type: String
+    Default: ACCESS+REFRESH
+    AllowedValues:
+      - ID+ACCESS+REFRESH
+      - ACCESS+REFRESH
+      - ACCESS
+    Description: Content of the Token Set returned to the Client Application
+  ACognitoDomain:
+    Type: String
+    MinLength: 8
+    MaxLength: 42
+    Description: Custom domain for the Cognito user pool
+  ZCodeExpiration:
+    Type: String
+    Default: '1800'
+    AllowedValues:
+      - '1800'
+      - '3600'
+    Description: Maximum lifetime for the generated code generated in seconds
+  ZCleaningRate:
+    Type: String
+    Default: 1 hour
+    AllowedValues:
+      - 1 hour
+      - 5 hours
+      - 1 day
+      - 5 days
+    Description: Time between two cleaning sweeps in the DynamoDB table
+  ZCodePollingInterval:
+    Type: String
+    Default: '5'
+    AllowedValues:
+      - '5'
+      - '15'
+      - '30'
+      - '60'
+    Description: Minimum time between two codes verification in seconds
+  ZDeviceCodeFormat:
+    Type: String
+    Default: '#aA'
+    AllowedValues:
+      - '#'
+      - '#a'
+      - '#A'
+      - '#!'
+      - '#aA'
+      - '#aA!'
+      - aA!
+      - a!
+      - A!
+    Description: Format for the code generated for Device usage where numeric is
+  ZDeviceCodeLength:
+    Type: String
+    Default: '64'
+    AllowedValues:
+      - '8'
+      - '16'
+      - '32'
+      - '64'
+      - '128'
+    Description: Length for the code generated for Device usage
+  ZUserCodeFormat:
+    Type: String
+    Default: '#B'
+    AllowedValues:
+      - '#'
+      - '#b'
+      - '#B'
+      - '#!'
+      - '#bB'
+      - '#bB!'
+      - bB!
+      - b!
+      - A!
+    Description: Format for the code generated for User usage where numeric is
+  ZUserCodeLength:
+    Type: String
+    Default: '8'
+    AllowedValues:
+      - '8'
+      - '16'
+      - '32'
+      - '64'
+      - '128'
+    Description: Length for the code generated for User usage
+Resources:
+  DeviceGrantVPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.192.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 3655b27c-5c0f-40d8-aba0-8a26053368c6
+  DeviceGrantInternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties: {}
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: e6dc5429-4691-473a-94c9-377cee3f1aac
+  DeviceGrantInternetGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: !Ref DeviceGrantInternetGateway
+      VpcId: !Ref DeviceGrantVPC
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 530958bf-802a-4ae1-a4c4-21bd7222ba06
+  DeviceGrantPublicSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref DeviceGrantVPC
+      AvailabilityZone: !Select 
+        - 0
+        - !GetAZs ''
+      CidrBlock: 10.192.10.0/24
+      MapPublicIpOnLaunch: false
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: b454fe1c-c2c2-4db8-9fdc-7269515cbfcc
+  DeviceGrantPublicSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref DeviceGrantVPC
+      AvailabilityZone: !Select 
+        - 1
+        - !GetAZs ''
+      CidrBlock: 10.192.11.0/24
+      MapPublicIpOnLaunch: false
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 619bcabc-91df-42bb-886c-a1cb473d8143
+  DeviceGrantPublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref DeviceGrantVPC
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 8b00c55b-9917-494a-ac43-24935414ed6a
+  DeviceGrantDefaultPublicRoute:
+    Type: 'AWS::EC2::Route'
+    DependsOn: DeviceGrantInternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref DeviceGrantPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref DeviceGrantInternetGateway
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: b9f4936a-92b1-4bba-bd36-798214a3709b
+  DeviceGrantPublicSubnet1RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref DeviceGrantPublicRouteTable
+      SubnetId: !Ref DeviceGrantPublicSubnet1
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: f10ef958-9c73-4ce0-a0ee-dffe34ad342a
+  DeviceGrantPublicSubnet2RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref DeviceGrantPublicRouteTable
+      SubnetId: !Ref DeviceGrantPublicSubnet2
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 12c20ae6-a6b9-48ba-9ec4-99ea2a349be0
+  DeployTokenCodeToS3:
+    Type: 'Custom::deploytokencodetos3'
+    Properties:
+      ServiceToken: !GetAtt 
+        - LoadS3
+        - Arn
+      bucketname: !Ref S3B4NNNP
+      packageURL: >-
+        https://github.com/aws-samples/cognito-device-grant-flow/releases/download/v1.1.0/cognito-device-grant-flow.zip
+      packageName: DeviceGrant-token.zip
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 2085180f-da86-44f5-9ece-43dab0c49343
+  DeployCleaningCodeToS3:
+    Type: 'Custom::deploycleaningcodetos3'
+    Properties:
+      ServiceToken: !GetAtt 
+        - LoadS3
+        - Arn
+      bucketname: !Ref S3B4NNNP
+      packageURL: >-
+        https://github.com/aws-samples/cognito-device-grant-flow-cleaning/releases/download/v1.0.0/cognito-device-grant-flow-cleaning.zip
+      packageName: DeviceGrant-cleaning.zip
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: e8ee5b08-fdb6-498d-9e4f-fb1a606e7586
+  S3B4NNNP:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 58f0e53c-91d9-4403-86df-bc654006379b
+  LoadS3:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: LoadS3
+      ReservedConcurrentExecutions: 2
+      Role: !GetAtt 
+        - LoadS3IAMRole
+        - Arn
+      Runtime: python3.11
+      Code:
+        ZipFile: |
+          # * * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+          # * * SPDX-License-Identifier: MIT-0
+          # * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+          # * software and associated documentation files (the "Software"), to deal in the Software
+          # * without restriction, including without limitation the rights to use, copy, modify,
+          # * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+          # * permit persons to whom the Software is furnished to do so.
+          # * * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+          # * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+          # * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+          # * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+          # * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+          # * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+          
+          import cfnresponse
+          from urllib.request import urlopen
+          from http.client import HTTPResponse
+          import boto3
+          import json
+
+
+          def lambda_handler(event, context):
+            print("start")
+            print(json.dumps(event))
+            myBucket = event['ResourceProperties']['bucketname']
+            packageName = event['ResourceProperties']['packageName']
+            packageURL = event['ResourceProperties']['packageURL']
+            print("bucketname: " + myBucket + ", path: " + packageURL + ", package: " + packageName);
+            if event['RequestType'] == 'Create':
+              print("in Create")
+              with urlopen(packageURL) as response:
+                print("Reponse:")
+                print(response)
+                headers = response.getheaders()
+                print("Headers:")
+                print(headers)
+                putS3Object(myBucket, packageName, response.read())
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+            elif event['RequestType'] == 'Delete':
+              print("in Delete")
+              s3 = boto3.client('s3')
+              try:
+                bucket = s3.list_objects_v2(Bucket=myBucket)
+                if 'Contents' in bucket:
+                  for obj in bucket['Contents']:
+                    s3.delete_object(Bucket=myBucket, Key=obj['Key'])
+                    print("deleted: " + obj['Key'])
+              except:
+                print('Bucket already deleted')
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+            else:
+              print(event)
+              print(context)
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+
+
+          def putS3Object(bucketName, objectName, objectData):
+            s3 = boto3.client('s3')
+            return s3.put_object(Bucket=bucketName, Key=objectName, Body=objectData)
+
+
+          def deleteBucket(bucketName):
+            s3 = boto3.client('s3')
+            return s3.delete_bucket(Bucket=bucketName)
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Timeout: 30
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 169c43ee-4d68-4cb1-88a1-a932d8b5e5b3
+    DependsOn:
+      - S3B4NNNP
+  LoadS3IAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Policies:
+        - PolicyName: GrantDeviceS3BucketPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                  - 's3:DeleteObject'
+                  - 's3:DeleteBucket'
+                Resource:
+                  - 'arn:aws:s3:::*/*'
+                  - !GetAtt S3B4NNNP.Arn
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: a68582b5-c650-4cd6-af81-8ad80e15f6f4
+  CUP532AI:
+    Type: 'AWS::Cognito::UserPool'
+    Properties: {}
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 8862289d-cb63-4bbf-9713-e07214fdeaea
+  TestCognitoUser:
+    Type: 'AWS::Cognito::UserPoolUser'
+    Properties:
+      Username: !Ref ACredsEmail
+      UserPoolId: !Ref CUP532AI
+      DesiredDeliveryMediums:
+        - EMAIL
+      UserAttributes:
+        - Name: email
+          Value: !Ref ACredsEmail
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: c148ff3a-8479-4574-a093-9387547f29a3
+  DeviceGrantALB:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      Type: application
+      SecurityGroups:
+        - !Ref DeviceGrantALBSG
+      Subnets:
+        - !Ref DeviceGrantPublicSubnet1
+        - !Ref DeviceGrantPublicSubnet2
+    DependsOn: DeviceGrantInternetGateway
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 00c1e791-1793-45b8-a5e4-1fc6d277b572
+  GrantDeviceALBCognitoClient:
+    Type: 'AWS::Cognito::UserPoolClient'
+    Properties:
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - openid
+      CallbackURLs:
+        - !Join 
+          - ''
+          - - 'https://'
+            - !Ref AFullyQualifiedDomainName
+            - /oauth2/idpresponse
+      ClientName: GrantDevice-Authroizer-ALB
+      ExplicitAuthFlows:
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      GenerateSecret: true
+      SupportedIdentityProviders:
+        - COGNITO
+      UserPoolId: !Ref CUP532AI
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 5cd7fa36-acbc-4fea-82c1-83e88f342cb9
+  DeviceCognitoClient:
+    Type: 'AWS::Cognito::UserPoolClient'
+    Properties:
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - openid
+      CallbackURLs:
+        - !Join 
+          - ''
+          - - 'https://'
+            - !Ref AFullyQualifiedDomainName
+            - /callback
+      ClientName: IoT-Device
+      ExplicitAuthFlows:
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      GenerateSecret: true
+      SupportedIdentityProviders:
+        - COGNITO
+      UserPoolId: !Ref CUP532AI
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 97639ded-e3a4-4128-874d-fc6c47316548
+  RetrieveCognitoSecretsLambda:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: RetrieveCognitoSecrets
+      ReservedConcurrentExecutions: 1
+      Role: !GetAtt 
+        - RetrieveCognitoSecretsIAMRole
+        - Arn
+      Runtime: python3.11
+      Code:
+        ZipFile: |
+          # * * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+          # * * SPDX-License-Identifier: MIT-0
+          # * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+          # * software and associated documentation files (the "Software"), to deal in the Software
+          # * without restriction, including without limitation the rights to use, copy, modify,
+          # * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+          # * permit persons to whom the Software is furnished to do so.
+          # * * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+          # * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+          # * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+          # * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+          # * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+          # * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+          import cfnresponse
+          import boto3
+          import json
+          
+          def lambda_handler(event, context):
+            print("start")
+            print(json.dumps(event))
+      
+            if event['RequestType'] == 'Create':
+              client = boto3.client('cognito-idp')
+              ALBClientID = event['ResourceProperties']['albauthorizerid']
+              DeviceCognitoClientID = event['ResourceProperties']['DeviceCognitoClientid']
+              userPoolId = event['ResourceProperties']['cupid']
+              
+              responseData = {}
+              
+              try:
+                response = client.describe_user_pool_client(
+                  UserPoolId=userPoolId,
+                  ClientId=ALBClientID
+                )
+                
+                responseData['ALBAuthorizerSecret'] = response['UserPoolClient']['ClientSecret']
+                
+              except:
+                print('Cannot retrive Cognito User Pool Client information for ALB')
+                cfnresponse.send(event, context, cfnresponse.FAILED, {})
+                
+              try:
+                response = client.describe_user_pool_client(
+                  UserPoolId=userPoolId,
+                  ClientId=DeviceCognitoClientID
+                )
+                
+                responseData['DeviceCognitoClientSecret'] = response['UserPoolClient']['ClientSecret']
+                
+              except:
+                print('Cannot retrive Cognito User Pool Client information for Device')
+                cfnresponse.send(event, context, cfnresponse.FAILED, {})
+              
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+            else:
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Timeout: 30
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 1fac8dff-416c-4f3e-921a-19bd3e8d1e45
+  RetrieveCognitoSecrets:
+    Type: 'Custom::retrievecognitosecrets'
+    Properties:
+      ServiceToken: !GetAtt 
+        - RetrieveCognitoSecretsLambda
+        - Arn
+      cupid: !Ref CUP532AI
+      albauthorizerid: !Ref GrantDeviceALBCognitoClient
+      DeviceCognitoClientid: !Ref DeviceCognitoClient
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: cc3d4f93-d107-4b88-9f2a-64eed50cd645
+  RetrieveCognitoSecretsIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Policies:
+        - PolicyName: RetrieveCognitoSecretsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'cognito-idp:ListUserPoolClients'
+                  - 'cognito-idp:DescribeUserPoolClient'
+                Resource: !GetAtt CUP532AI.Arn
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 041e645e-9d6f-4939-af47-fd6f9fa87e42
+  DeviceGrantToken:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: DeviceGrant-token
+      ReservedConcurrentExecutions: 10
+      Role: !GetAtt 
+        - DeviceGrantTokenIAMRole
+        - Arn
+      Runtime: nodejs20.x
+      Code:
+        S3Bucket: !Ref S3B4NNNP
+        S3Key: DeviceGrant-token.zip
+      Environment:
+        Variables:
+          APP_CLIENT_ID: !Ref GrantDeviceALBCognitoClient
+          APP_CLIENT_SECRET: !GetAtt 
+            - RetrieveCognitoSecrets
+            - ALBAuthorizerSecret
+          CODE_EXPIRATION: !Ref ZCodeExpiration
+          CODE_VERIFICATION_URI: !Ref AFullyQualifiedDomainName
+          CUP_DOMAIN: !Ref ACognitoDomain
+          CUP_ID: !Ref CUP532AI
+          CUP_REGION: !Select 
+            - 0
+            - !Split 
+              - _
+              - !Ref CUP532AI
+          DEVICE_CODE_FORMAT: !Ref ZDeviceCodeFormat
+          DEVICE_CODE_LENGTH: !Ref ZDeviceCodeLength
+          DYNAMODB_AUTHZ_STATE_INDEX: AuthZ_state-index
+          DYNAMODB_TABLE: DeviceGrant
+          DYNAMODB_USERCODE_INDEX: User_code-index
+          POLLING_INTERVAL: !Ref ZCodePollingInterval
+          USER_CODE_FORMAT: !Ref ZUserCodeFormat
+          USER_CODE_LENGTH: !Ref ZUserCodeLength
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 30
+    DependsOn: DeployTokenCodeToS3 
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 7f018f35-89a1-45c8-baca-cae84cb55b86
+  DeviceGrantTokenCleaning:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: DeviceGrant-token-cleaning
+      ReservedConcurrentExecutions: 1
+      Role: !GetAtt 
+        - DeviceGrantCleaningIAMRole
+        - Arn
+      Runtime: nodejs20.x
+      Code:
+        S3Bucket: !Ref S3B4NNNP
+        S3Key: DeviceGrant-cleaning.zip
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: DeviceGrant
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 30
+    DependsOn: DeployTokenCodeToS3 
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 56f7d7ef-3eb2-4cf4-946e-1a2576da4dcd
+  CognitoUserPoolDomain:
+    Type: 'AWS::Cognito::UserPoolDomain'
+    Properties:
+      Domain: !Ref ACognitoDomain
+      UserPoolId: !Ref CUP532AI
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: aeb53dc1-966d-4b39-bf32-8ad628cf3d4d
+  DeviceGrantALBTarget:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      HealthCheckEnabled: false
+      Name: DeviceGrant-TG
+      TargetType: lambda
+      Targets:
+        - Id: !GetAtt DeviceGrantToken.Arn
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: a22b0ef1-78f6-4dae-b688-01424e9b225d
+    DependsOn:
+      - ALBToLambdaPerms
+  DevicegrantALB443:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      Certificates:
+        - CertificateArn: !Ref ACertificateARN
+      LoadBalancerArn: !Ref DeviceGrantALB
+      DefaultActions:
+        - Type: fixed-response
+          FixedResponseConfig:
+            ContentType: text/html
+            MessageBody: ''
+            StatusCode: '503'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 4f4eb818-1ca9-41c0-b5f8-b3cd14e15f17
+  DevicegrantALB443Device:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      ListenerArn: !Ref DevicegrantALB443
+      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - /device
+      Actions:
+        - Type: authenticate-cognito
+          Order: 1
+          AuthenticateCognitoConfig:
+            OnUnauthenticatedRequest: authenticate
+            Scope: openid
+            UserPoolArn: !GetAtt CUP532AI.Arn
+            UserPoolClientId: !Ref GrantDeviceALBCognitoClient
+            UserPoolDomain: !Ref CognitoUserPoolDomain
+        - Type: forward
+          Order: 2
+          TargetGroupArn: !Ref DeviceGrantALBTarget
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 2d62d0e6-fadf-4f9a-bef2-10588911df8e
+  DevicegrantALB443TokenOrCallback:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      ListenerArn: !Ref DevicegrantALB443
+      Priority: 2
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - /token
+              - /callback
+      Actions:
+        - Type: forward
+          Order: 1
+          TargetGroupArn: !Ref DeviceGrantALBTarget
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: d0a28ebe-21de-401c-a246-1abe77c4717b
+  ALBToLambdaPerms:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !GetAtt DeviceGrantToken.Arn
+      Principal: elasticloadbalancing.amazonaws.com
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 0a44a94c-2418-43f5-9e25-4df53fb76afb
+  CWRuleForCleaning:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Description: Invoke Cleaning Lambda
+      State: ENABLED
+      ScheduleExpression: !Join 
+        - ''
+        - - rate(
+          - !Ref ZCleaningRate
+          - )
+      Targets:
+        - Id: Cleaning-Table
+          Arn: !GetAtt DeviceGrantTokenCleaning.Arn
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: a3dffc32-2a71-4f5e-a7a9-1eddddec727e
+  CWRuleToLambda:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !GetAtt DeviceGrantTokenCleaning.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt CWRuleForCleaning.Arn
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: b4d69f67-f8c3-4267-b429-554a12a0d447
+  DeviceGrantALBSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: SG for Device grant ALB
+      GroupName: DevicegrantALBSG
+      VpcId: !Ref DeviceGrantVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS going in
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Whatever going out
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 307a84b8-850e-4f6d-b558-62360952c757
+  DeviceGrantDynamoDBTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      BillingMode: PROVISIONED
+      SSESpecification:
+        SSEEnabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: Device_code
+          AttributeType: S
+        - AttributeName: User_code
+          AttributeType: S
+        - AttributeName: AuthZ_State
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: AuthZ_state-index
+          KeySchema:
+            - AttributeName: AuthZ_State
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: '5'
+            WriteCapacityUnits: '5'
+        - IndexName: User_code-index
+          KeySchema:
+            - AttributeName: User_code
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: '5'
+            WriteCapacityUnits: '5'
+      KeySchema:
+        - AttributeName: Device_code
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
+      TableName: DeviceGrant
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 690a45bd-fa42-4b86-bf43-1d7bd84f710c
+  DeviceGrantTokenIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Policies:
+        - PolicyName: DeviceGrantTokenTablePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:DeleteItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:Scan'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:UpdateItem'
+                Resource:
+                  - !GetAtt DeviceGrantDynamoDBTable.Arn
+                  - !Join 
+                    - ''
+                    - - !GetAtt DeviceGrantDynamoDBTable.Arn
+                      - /index/User_code-index
+                  - !Join 
+                    - ''
+                    - - !GetAtt DeviceGrantDynamoDBTable.Arn
+                      - /index/AuthZ_state-index
+        - PolicyName: DevicegrantTokenRetrieveSecretsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'cognito-idp:ListUserPoolClients'
+                  - 'cognito-idp:DescribeUserPoolClient'
+                Resource: !GetAtt CUP532AI.Arn
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 34109532-dba4-4dc7-8a96-ad3b585ebab7
+  DeviceGrantCleaningIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Policies:
+        - PolicyName: CleaningTablePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:DeleteItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:Scan'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:UpdateItem'
+                Resource: !GetAtt DeviceGrantDynamoDBTable.Arn
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 3cc2c718-243b-4034-a328-a6422f8134d5
+Outputs:
+  TestEndPointForDevice:
+    Value: !Join 
+      - ''
+      - - 'https://'
+        - !Ref AFullyQualifiedDomainName
+        - /token
+    Description: HTTPS Endpoint for the simulated DEVICE to make their requests
+  TestEndPointForUser:
+    Value: !Join 
+      - ''
+      - - 'https://'
+        - !Ref AFullyQualifiedDomainName
+        - /device
+    Description: HTTPS Endpoint for the USER to make their requests
+  ALBCNAMEForDNSConfiguration:
+    Value: !GetAtt DeviceGrantALB.DNSName
+    Description: CNAME of the ALB Endpoint to point your DNS to
+  UserUserName:
+    Value: !Ref ACredsEmail
+    Description: Username for the Test Cognito User
+  UserPassword:
+    Value: Will be sent to the email provided as username
+    Description: Password for the Test Cognito User
+  DeviceCognitoClientClientID:
+    Description: >-
+      App Client ID to be use by the simulated Device to interact with the
+      authorization server
+    Value: !Ref DeviceCognitoClient
+  DeviceCognitoClientClientSecret:
+    Description: >-
+      App Client Secret to be use by simulated Device to interact with the
+      authorization server
+    Value: !GetAtt 
+      - RetrieveCognitoSecrets
+      - DeviceCognitoClientSecret
