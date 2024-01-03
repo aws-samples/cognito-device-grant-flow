@@ -17,15 +17,52 @@
  */
 //Reference to Commnon library
 const common = require( __dirname + '/common.js');
+<<<<<<< HEAD
+
+const { CognitoIdentityProvider } = require("@aws-sdk/client-cognito-identity-provider");
+const { DynamoDB } = require("@aws-sdk/client-dynamodb");
+
 //Reference to Crypto library for PKCE challenge
 const crypto = require('crypto');
 
+var cognitoidentityserviceprovider = new CognitoIdentityProvider({
+    // The transformation for apiVersions is not implemented.
+    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+    // Please create/upvote feature request on aws-sdk-js-codemod for apiVersions.
+    // The transformation for apiVersions is not implemented.
+    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+    // Please create/upvote feature request on aws-sdk-js-codemod for apiVersions.
+    apiVersions: {
+        cognitoidentityserviceprovider: '2016-04-18',
+    },
+});
+var dynamodb = new DynamoDB({
+    // The transformation for apiVersions is not implemented.
+    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+    // Please create/upvote feature request on aws-sdk-js-codemod for apiVersions.
+    // The transformation for apiVersions is not implemented.
+    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+    // Please create/upvote feature request on aws-sdk-js-codemod for apiVersions.
+    apiVersions: {
+        dynamodb: '2012-08-10',
+    },
+});
+
+=======
+//Reference to Crypto library for PKCE challenge
+const crypto = require('crypto');
+
+>>>>>>> main
 //Function that processes "Authorize" by an authenticated end user for a valid user code
 //  client_id:      Client ID of the client application that initiated the Authorization request
 //  device_code:    Primary key of the "Authorized" Authorization request in the DynamoDB table
 //  callback:       Callback function to return the message
 //  dynamodb:       Pointer to the DynamoDB SDK request handler
+<<<<<<< HEAD
+function processAllow(client_id, device_code, callback) {
+=======
 function processAllow(client_id, device_code, callback, dynamodb) {
+>>>>>>> main
     
     //Generating a code verifier and challenge for the PKCE protection of the OAuth2 flow
     var code_verifier = common.randomString(32, 'aA#');

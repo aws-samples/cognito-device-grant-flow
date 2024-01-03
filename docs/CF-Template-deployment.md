@@ -20,7 +20,7 @@ Once imported in ACM:
 
 2. Click on the ► icon next to your certificate:
 
-![Locating Certificate]../img/ACM-Locating-certificate.png)
+![Locating Certificate](../img/ACM-Locating-certificate.png)
 
 3. Copy the associated ARN in a text file:
 
@@ -28,13 +28,14 @@ Once imported in ACM:
 
 ## Deploying the solution using a CloudFormation Template
 To configure the workshop you will need to deploy the master workshop template.
-> Before you deploy the CloudFormation template feel free to view it [here](https://awsiammedia.s3.amazonaws.com/public/sample/877-OAuth-device-grant-flow-Cognito-Lambda/CFT-DeviceGrantFlowDemo-latest.yml)
+> Before you deploy the CloudFormation template feel free to view it [here](../template/CFT-DeviceGrantFlowDemo-latest.yml)
 
 It is best to deploy in `us-east-1` using Cloud Formation.
 
 During the configuration, you will be asked to:
 - Provide a name for the stack
 - Provide the ARN of the certificate created/imported in AWS Certificate Manager at the previous step
+- Provide a prefix for the Cognito Hosted UI
 - Provide a valid email address you own for the Cognito User’s initial password to be sent to you;
 - Provide the FQDN you choose and that is associated to the certificate created/imported in AWS Certificate Manager at the previous step
 

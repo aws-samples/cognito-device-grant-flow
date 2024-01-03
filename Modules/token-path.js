@@ -17,9 +17,42 @@
  */
 //Reference to Commnon library
 const common = require( __dirname + '/common.js');
+<<<<<<< HEAD
+
+const { CognitoIdentityProvider } = require("@aws-sdk/client-cognito-identity-provider");
+const { DynamoDB } = require("@aws-sdk/client-dynamodb");
+
 //Reference to https library for retrieving JWT tokens from Cognito using the Athorization Code grant flow with PKCE
 const https = require('https');
 
+var cognitoidentityserviceprovider = new CognitoIdentityProvider({
+    // The transformation for apiVersions is not implemented.
+    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+    // Please create/upvote feature request on aws-sdk-js-codemod for apiVersions.
+    // The transformation for apiVersions is not implemented.
+    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+    // Please create/upvote feature request on aws-sdk-js-codemod for apiVersions.
+    apiVersions: {
+        cognitoidentityserviceprovider: '2016-04-18',
+    },
+});
+var dynamodb = new DynamoDB({
+    // The transformation for apiVersions is not implemented.
+    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+    // Please create/upvote feature request on aws-sdk-js-codemod for apiVersions.
+    // The transformation for apiVersions is not implemented.
+    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+    // Please create/upvote feature request on aws-sdk-js-codemod for apiVersions.
+    apiVersions: {
+        dynamodb: '2012-08-10',
+    },
+});
+
+=======
+//Reference to https library for retrieving JWT tokens from Cognito using the Athorization Code grant flow with PKCE
+const https = require('https');
+
+>>>>>>> main
 //Function to process a POST request pm /token
 //  event:          Full event trapped by the Lambda function
 //  callback:       Callback function to return the message
@@ -32,7 +65,11 @@ function processPostRequest(event, callback) {
     };
 
     //Acquiring Cognito Client App configuration
+<<<<<<< HEAD
+    cognitoidentityserviceprovider.describeUserPoolClient(params, function(err, data) {
+=======
     common.cognitoidentityserviceprovider.describeUserPoolClient(params, function(err, data) {
+>>>>>>> main
         if (err) { 
             console.log("There was an error acquiring the Cognito Client App configuration " + event.queryStringParameters.client_id);
             console.log(err, err.stack);
@@ -166,7 +203,11 @@ function requestSetOfCodes(event, callback) {
         TableName: process.env.DYNAMODB_TABLE
     };
     // Insert the item in DynamoDB
+<<<<<<< HEAD
+    dynamodb.putItem(DynamoDBParams, function(err, data) {
+=======
     common.dynamodb.putItem(DynamoDBParams, function(err, data) {
+>>>>>>> main
         if (err) {
             //There was an error
             console.log(err, err.stack);
@@ -193,7 +234,11 @@ function requestJWTs(event, callback) {
         },
         TableName: process.env.DYNAMODB_TABLE
     };
+<<<<<<< HEAD
+    dynamodb.getItem(DynamoDBParams, function(err, data) {
+=======
     common.dynamodb.getItem(DynamoDBParams, function(err, data) {
+>>>>>>> main
         if (err) { 
             //There was an error
             console.log("Error occured while retrieving device code");
@@ -240,7 +285,11 @@ function requestJWTs(event, callback) {
                     TableName: process.env.DYNAMODB_TABLE,
                     UpdateExpression: "SET #Status = :status"
                 };
+<<<<<<< HEAD
+                dynamodb.updateItem(DynamoDBParams, function(err, data) {
+=======
                 common.dynamodb.updateItem(DynamoDBParams, function(err, data) {
+>>>>>>> main
                     if (err) {
                         //There was an error, so return an JSON error message the Code has expired
                         console.log("The Device code has expired, but an error occured when updating the DB");
@@ -272,7 +321,11 @@ function requestJWTs(event, callback) {
                     TableName: process.env.DYNAMODB_TABLE,
                     UpdateExpression: "SET #LC = :lc"
                 };
+<<<<<<< HEAD
+                dynamodb.updateItem(DynamoDBParams, function(err, data) {
+=======
                 common.dynamodb.updateItem(DynamoDBParams, function(err, data) {
+>>>>>>> main
                     if (err) {
                         //There was an error, so return an JSON error message the client application has to slow down
                         console.log("Client makes too much API calls, but an error occured while updated the last check timestamp in the DB");
@@ -306,7 +359,11 @@ function requestJWTs(event, callback) {
                     TableName: process.env.DYNAMODB_TABLE,
                     UpdateExpression: "SET #LC = :lc"
                 };
+<<<<<<< HEAD
+                dynamodb.updateItem(DynamoDBParams, function(err, data) {
+=======
                 common.dynamodb.updateItem(DynamoDBParams, function(err, data) {
+>>>>>>> main
                     if (err) {
                         //There was an error, so return an JSON error message the client application has to slow down
                         console.log("Client is on time for checking, but an error occured while updated the last check timestamp in the DB");
@@ -385,7 +442,11 @@ function requestJWTs(event, callback) {
                                             TableName: process.env.DYNAMODB_TABLE,
                                             UpdateExpression: "SET #Status = :status"
                                         };
+<<<<<<< HEAD
+                                        dynamodb.updateItem(DynamoDBParams, function(err, data) {
+=======
                                         common.dynamodb.updateItem(DynamoDBParams, function(err, data) {
+>>>>>>> main
                                             if (err) {
                                                 //There was an error, return expired message as Authroization code has been used
                                                 console.log("We got the tokens but we got an error updating the DB");
