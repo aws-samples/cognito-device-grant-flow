@@ -18,6 +18,7 @@
 //Reference to Commnon library
 const common = require( __dirname + '/common.js');
 
+<<<<<<< HEAD
 const { CognitoIdentityProvider } = require("@aws-sdk/client-cognito-identity-provider");
 const { DynamoDB } = require("@aws-sdk/client-dynamodb");
 
@@ -44,6 +45,8 @@ var dynamodb = new DynamoDB({
     },
 });
 
+=======
+>>>>>>> main
 //Function that processes Cognito callback after end user Authorization Code grant flow with PKCE request
 //  event:          Full event trapped by the Lambda function
 //  callback:       Callback function to return the message
@@ -61,7 +64,11 @@ function processAuthZCodeCallback(event, callback) {
         IndexName: process.env.DYNAMODB_AUTHZ_STATE_INDEX,
         TableName: process.env.DYNAMODB_TABLE
     };
+<<<<<<< HEAD
     dynamodb.query(DynamoDBParams, function(err, data) {
+=======
+    common.dynamodb.query(DynamoDBParams, function(err, data) {
+>>>>>>> main
         if (err) { 
             //There was an error retrieving the Authorization request
             console.log("Authorization State can't be retrieved: " +  event.queryStringParameters.state);
@@ -98,7 +105,11 @@ function processAuthZCodeCallback(event, callback) {
                     TableName: process.env.DYNAMODB_TABLE,
                     UpdateExpression: "SET #AuthZ_code = :value"
                 };
+<<<<<<< HEAD
                 dynamodb.updateItem(DynamoDBParams, function(err, data) {
+=======
+                common.dynamodb.updateItem(DynamoDBParams, function(err, data) {
+>>>>>>> main
                     if (err) {
                         //Update was not successful
                         console.log("Unable to set state to Authorization Code for Device Code");

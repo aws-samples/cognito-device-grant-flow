@@ -17,16 +17,20 @@
  */
 //Reference to Commnon library
 const common = require( __dirname + '/common.js');
+<<<<<<< HEAD
 
 const { CognitoIdentityProvider } = require("@aws-sdk/client-cognito-identity-provider");
 const { DynamoDB } = require("@aws-sdk/client-dynamodb");
 
+=======
+>>>>>>> main
 //Reference to Authorization path library
 const authzP = require( __dirname + '/authorization-path.js');
 
 //Require a filesystem object to read the HTML page dedicated to end user UI
 var fs = require("fs");
 
+<<<<<<< HEAD
 var cognitoidentityserviceprovider = new CognitoIdentityProvider({
     // The transformation for apiVersions is not implemented.
     // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
@@ -50,6 +54,8 @@ var dynamodb = new DynamoDB({
     },
 });
 
+=======
+>>>>>>> main
 //Function that processes request by an authenticated end user with a user code
 //  event:          Full event trapped by the Lambda function
 //  callback:       Callback function to return the message
@@ -65,7 +71,11 @@ function requestUserCodeProcessing(event, callback) {
         IndexName: process.env.DYNAMODB_USERCODE_INDEX,
         TableName: process.env.DYNAMODB_TABLE
     };
+<<<<<<< HEAD
     dynamodb.query(DynamoDBParams, function(err, data) {
+=======
+    common.dynamodb.query(DynamoDBParams, function(err, data) {
+>>>>>>> main
         if (err) { 
             //There was an error retrieving the Authorization request
             console.log("User code does not exist: " +  event.queryStringParameters.code);
@@ -110,7 +120,11 @@ function requestUserCodeProcessing(event, callback) {
                         TableName: process.env.DYNAMODB_TABLE,
                         UpdateExpression: "SET #Status = :status"
                     };
+<<<<<<< HEAD
                     dynamodb.updateItem(DynamoDBParams, function(err, data) {
+=======
+                    common.dynamodb.updateItem(DynamoDBParams, function(err, data) {
+>>>>>>> main
                         if (err) {
                             //There was an error updating the Authorization request
                             console.log("User Code has expired but an error occurend when updating the DB");
@@ -152,7 +166,11 @@ function requestUserCodeProcessing(event, callback) {
                             TableName: process.env.DYNAMODB_TABLE,
                             UpdateExpression: "SET #Status = :status, #Subject = :subject"
                         };
+<<<<<<< HEAD
                         dynamodb.updateItem(DynamoDBParams, function(err, data) {
+=======
+                        common.dynamodb.updateItem(DynamoDBParams, function(err, data) {
+>>>>>>> main
                             if (err) {
                                 //There was an error updating the Authorization request
                                 console.log("Unable to set state to autorized for User Code");
@@ -160,7 +178,11 @@ function requestUserCodeProcessing(event, callback) {
                                 common.returnHTMLError(400, "<H1>Error, can't update status</H1>", callback);
                              } else {
                                 //Update was successfull, follwoing up with the Authroization path
+<<<<<<< HEAD
                                 authzP.processAllow(data.Attributes.Client_id.S, data.Attributes.Device_code.S, callback, dynamodb);
+=======
+                                authzP.processAllow(data.Attributes.Client_id.S, data.Attributes.Device_code.S, callback, common.dynamodb);
+>>>>>>> main
                             }
                         });
                     //If the end-user "Denied" the Authorization request
@@ -189,7 +211,11 @@ function requestUserCodeProcessing(event, callback) {
                             TableName: process.env.DYNAMODB_TABLE,
                             UpdateExpression: "SET #Status = :status, #Subject = :subject"
                         };
+<<<<<<< HEAD
                         dynamodb.updateItem(DynamoDBParams, function(err, data) {
+=======
+                        common.dynamodb.updateItem(DynamoDBParams, function(err, data) {
+>>>>>>> main
                             if (err) {
                                 //There was an error updating the Authorization request
                                 console.log("Unable to set state to autorized for User Code");
