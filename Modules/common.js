@@ -15,7 +15,6 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-<<<<<<< HEAD
 
 const { CognitoIdentityProvider } = require("@aws-sdk/client-cognito-identity-provider");
 const { DynamoDB } = require("@aws-sdk/client-dynamodb");
@@ -42,19 +41,6 @@ var dynamodb = new DynamoDB({
         dynamodb: '2012-08-10',
     },
 });
-=======
-var AWS = require("aws-sdk");
-
-//Initializing API versions
-AWS.config.apiVersions = {
-    cognitoidentityserviceprovider: '2016-04-18',
-    dynamodb: '2012-08-10',
-    // other service API versions
-};
-
-var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
-var dynamodb = new AWS.DynamoDB();
->>>>>>> main
 
 //Function a random string based of the required lenght and format
 //  length:     length of the random string to generate
@@ -114,11 +100,7 @@ function base6UurlEncode(unencoded) {
 //  unencoded:  The decoded value
 //  result:     The Base64 encoded value
 function base64Encode(unencoded) {
-<<<<<<< HEAD
   return new Buffer.from(unencoded || '').toString('base64');
-=======
-  return new Buffer(unencoded || '').toString('base64');
->>>>>>> main
 }
 
 //Function that returns an error code as a JSON message
